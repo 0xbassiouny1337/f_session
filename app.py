@@ -4,7 +4,7 @@ import os
 import subprocess
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Required for session management and flash messages
+app.secret_key = 'secret'  # Required for session management and flash messages
 
 # Database connection
 def get_db_connection():
@@ -18,14 +18,14 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def check_login():
-    user = request.cookies.get('user')
-    user_id = request.cookies.get('id')
-    if user and user_id:
+    username = session.get('user')
+    user_id = session.get('id')
+    if username and user_id:
         try:
             connection = get_db_connection()
             cursor = connection.cursor()
             # Vulnerable SQL query with SQL Injection
-            cursor.execute(f"SELECT * FROM users WHERE username='{user}' AND id='{user_id}'")
+            cursor.execute(f"SELECT * FROM users WHERE username='{username}' AND id='{user_id}'")
             user = cursor.fetchone()
             if user:
                 return user
@@ -35,23 +35,11 @@ def check_login():
             connection.close()
     return None
 
+
 @app.route('/')
 def home():
     user = check_login()
-    if user:
-
-        try:
-            connection = get_db_connection()
-            cursor = connection.cursor()
-      #      cursor.execute("SELECT * FROM products")
-        #    products = cursor.fetchall()
-        except Exception as e:
-            print(f"Error: {e}")
-        finally:
-            connection.close()
-        return render_template('home.html', user=user)
-    else:
-        return render_template('home.html', user=None)
+    return render_template('home.html', user=user)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -65,12 +53,13 @@ def login():
             cursor.execute(f"SELECT * FROM users WHERE username='{username}' AND password='{password}'")
             user = cursor.fetchone()
             if user:
-                resp = make_response(redirect(url_for('home')))
-                resp.set_cookie('user', user['username'])
-                resp.set_cookie('id', str(user['id']))
-                return resp
+                session['user'] = user['username']
+                session['id'] = user['id']
+                session['role'] = user['role']  # Ensure role is set in session
+                return redirect(url_for('home'))
             else:
-                return "Login failed", 401
+                flash('Invalid username or password', 'danger')
+                return redirect(url_for('login'))
         except Exception as e:
             print(f"Error: {e}")
         finally:
@@ -153,7 +142,7 @@ def profile():
 def admin():
     user = check_login()
     command_output = ''
-    if user and user['username'] == 'admin' and user['id'] == 1:
+    if user and user['role'] == 'admin':
         users = []
         if request.method == 'POST':
             if 'delete_users' in request.form:
@@ -206,20 +195,28 @@ def admin():
 
 @app.route('/logout')
 def logout():
-    resp = make_response(redirect(url_for('login')))
-    resp.delete_cookie('user')
-    resp.delete_cookie('id')
-    return resp
+    session.pop('user', None)
+    session.pop('id', None)
+    session.pop('role', None)
+    return redirect(url_for('login'))
 
 if __name__ == '__main__':
-    if not os.path.exists('cyberus_demo.db'):
+    if not os.path.exists('database.db'):
         # Initialize database if it does not exist
         connection = get_db_connection()
-
+        # Create table for users if it doesn't exist
+        with connection:
+            connection.execute('''CREATE TABLE users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT,
+                username TEXT,
+                password TEXT,
+                role TEXT,
+                file TEXT
+            )''')
         connection.close()
 
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
 
-    
     app.run(debug=True)
