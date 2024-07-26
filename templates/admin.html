@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- Include Navbar -->
+    {% include 'navbar.html' %}
+    <div class="container">
+        <h1>Admin Panel</h1>
+        <!-- Button to delete all users -->
+        <form method="POST" action="">
+            <button type="submit" name="delete_users" class="delete-btn">Delete All Users</button>
+        </form>
+        <!-- List of users with update functionality -->
+        <h2>Users List</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Password</th>
+                    <th>Role</th>
+                    <th>File Path</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user['id'] }}</td>
+                    <td>{{ user['username'] }}</td>
+                    <td>{{ user['email'] }}</td>
+                    <td>{{ user['password'] }}</td>
+                    <td>{{ user['role'] }}</td>
+                    <td>{{ user['file'] }}</td>
+                    <td>
+                        <form method="POST" action="">
+                            <input type="hidden" name="user_id" value="{{ user['id'] }}">
+                            <input type="text" name="email" placeholder="New Email" value="{{ user['email'] }}">
+                            <input type="text" name="username" placeholder="New Username" value="{{ user['username'] }}">
+                            <input type="text" name="password" placeholder="New Password" value="{{ user['password'] }}">
+                            <input type="text" name="role" placeholder="New Role" value="{{ user['role'] }}">
+                            <button type="submit" name="update_user">Update</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <!-- Command execution -->
+        <h2>Execute Command</h2>
+        <form method="POST" action="">
+            <input type="text" name="command" placeholder="Enter command" required>
+            <button type="submit" name="execute_command">Execute</button>
+        </form>
+        <div class="command-output">
+            <pre>{{ command_output }}</pre>
+        </div>
+    </div>
+</body>
+</html>

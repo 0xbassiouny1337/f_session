@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- Include Navbar -->
+    {% include 'navbar.html' %}
+    <div class="container">
+        <h1>Home</h1>
+        {% if user %}
+            <p>Welcome back, {{ user['username'] }}!</p>
+        {% else %}
+            <p>Please <a href="{{ url_for('login') }}">login</a> or <a href="{{ url_for('signup') }}">signup</a>.</p>
+        {% endif %}
+
+    </div>
+</body>
+</html>

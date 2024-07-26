@@ -1,0 +1,16 @@
+<div class="navbar">
+    <div class="logo">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="CyberUs Logo">
+    </div>
+    {% if not user %}
+    <a href="{{ url_for('login') }}">Login</a>
+    <a href="{{ url_for('signup') }}">Signup</a>
+    {% else %}
+    <a href="{{ url_for('profile') }}">Profile</a>
+    <a href="{{ url_for('home') }}">Home</a>
+    {% if user['role'] == 'admin' %}
+    <a href="{{ url_for('admin') }}">Admin Panel</a>
+    {% endif %}
+    <a href="{{ url_for('logout') }}">Logout</a>
+    {% endif %}
+</div>
